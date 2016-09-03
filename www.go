@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -98,6 +99,17 @@ func contentHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/html")
 		fmt.Fprint(w, page)
 
+	case "/ip":
+		idx := strings.Index(r.RemoteAddr, ":")
+		if idx == -1 {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		ip := r.RemoteAddr[:idx]
+
+		w.Header().Add("Content-Type", "text/plain")
+		fmt.Fprint(w, ip)
+
 	case "/style.css":
 		w.Header().Add("Content-Type", "text/css")
 		fmt.Fprint(w, style)
@@ -169,6 +181,7 @@ func main() {
 }
 
 // Website data below here.
+// TODO(bran): get go-bindata (or equivalent) working with bazel and use it for static data instead
 const (
 	faviconBase64 = `
 iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAACmklEQVR4Ae3YU5DEaBiG0TPm2rZt
