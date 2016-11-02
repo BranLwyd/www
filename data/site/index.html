@@ -1,0 +1,34 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>Branland</title>
+	<link rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Droid+Serif'>
+	<link rel="stylesheet" type='text/css' href="style.css">
+</head>
+<body>
+	<div class="ribbon"></div>
+	<div class="content">
+		<div class="header">
+			<h1>branland</h1>
+		</div>
+
+		<div class="inner-content">
+			<h2>Introduction</h2>
+			<p>Hi, I'm Brandon. Welcome to Branland! This is my personal website.  I'm a Software Engineer in the Bay Area. My interests include mathematics, computer science, and information security. I'm also into board games, tabletop role-playing games, science fiction, coffee, wine, and whiskey. I'm relatively new to the Bay, so I'm always looking for excuses to explore; I particularly enjoy San Francisco, Santa Cruz, and Carmel-by-the-Sea.</p>
+
+			<h2>Projects</h2>
+
+			<p>I do a lot of hobby programming. Most of it isn't that useful, but it is kind of fun. Most of my coding these days is done in <a href="https://golang.org">Go</a>, which is a pretty great language. I'm also proficient in Java, Python, C#, and a number of other languages.</p>
+
+			<p>Here are some of my favorites:</p>
+
+			<ul>
+				<li><a href="https://github.com/BranLwyd/bNotify">bNotify</a>: A pure-Go daemon &amp; Android app which allows you to push notifications to your phone from any computer. It uses <a href="https://developers.google.com/cloud-messaging/">GCM</a> to push the notifications. The notification data is encrypted &amp; authenticated in transit. However, this is just a toy project, so you probably shouldn't trust it; at the very least, every server uses the same key so compromise of one server leads to compromise of the authenticity/confidentiality of messages from all servers. It does retry nicely, however. It's good for sending best-effort notifications for events from your various servers.</li>
+				<li><a href="https://github.com/BranLwyd/rss-download">rss-download</a>: A pure-Go daemon &amp; CLI tool which watches a set of RSS feeds and downloads any new files (stored as links) to a specified directory. It normally polls slowly, but each RSS feed can be configured to poll more quickly during a specified interval.</li>
+				<li><a href="https://github.com/BranLwyd/tumblr-sync">tumblr-sync</a>: A Java library which provides access to various Tumblr objects as native Java objects, and allows those objects to be persisted locally.</li>
+				<li><a href="https://github.com/BranLwyd/bdcpu16">bdcpu16</a>: A Java implementation of the <a href="https://raw.githubusercontent.com/gatesphere/demi-16/master/docs/dcpu-specs/dcpu-1-7.txt">DCPU-16</a> virtual machine from Notch's cancelled 0x10c. Includes support for all hardware defined by the specification, an assembler, and a debugger.</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>
