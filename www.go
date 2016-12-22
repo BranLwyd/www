@@ -6,72 +6,22 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
-	"time"
 
 	"./data"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 const (
-	host           = "bran.land"
-	certFile       = "/var/lib/www/cert.crt"
-	keyFile        = "/var/lib/www/decrypted.key"
-	leChallengeDir = "/var/lib/www/.le/.well-known"
+	host    = "bran.land"
+	email   = "brandon.pitman@gmail.com"
+	certDir = "/var/lib/www/certs"
 )
 
 var (
 	mux *http.ServeMux
 )
-
-type certCache struct {
-	certFile string
-	keyFile  string
-
-	certMu sync.RWMutex
-	cert   *tls.Certificate
-}
-
-func newCertCache(certFile string, keyFile string, refreshInterval time.Duration) (*certCache, error) {
-	cc := &certCache{
-		certFile: certFile,
-		keyFile:  keyFile,
-	}
-
-	if err := cc.set(); err != nil {
-		return nil, err
-	}
-
-	go func() {
-		for range time.Tick(refreshInterval) {
-			log.Print("Reloading certificate")
-			if err := cc.set(); err != nil {
-				log.Printf("Could not reload certificate: %v", err)
-			}
-		}
-	}()
-
-	return cc, nil
-}
-
-func (cc *certCache) set() error {
-	cert, err := tls.LoadX509KeyPair(cc.certFile, cc.keyFile)
-	if err != nil {
-		return err
-	}
-
-	cc.certMu.Lock()
-	defer cc.certMu.Unlock()
-	cc.cert = &cert
-	return nil
-}
-
-func (cc *certCache) Get() *tls.Certificate {
-	cc.certMu.RLock()
-	defer cc.certMu.RUnlock()
-	return cc.cert
-}
 
 type loggingHandler struct {
 	h       http.Handler
@@ -108,13 +58,9 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpHandler() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", redirectHandler)
-	mux.Handle("/.well-known/", http.StripPrefix("/.well-known/", http.FileServer(http.Dir(leChallengeDir))))
-
 	server := &http.Server{
-		Addr:    ":8080",
-		Handler: NewLoggingHandler("http ", mux),
+		Addr:    ":http",
+		Handler: NewLoggingHandler("http ", http.HandlerFunc(redirectHandler)),
 	}
 	log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
 }
@@ -122,16 +68,15 @@ func httpHandler() {
 func main() {
 	go httpHandler()
 
-	// Read cert.
-	log.Printf("Loading certificate")
-	certCache, err := newCertCache("/var/lib/www/cert.crt", "/var/lib/www/decrypted.key", time.Hour)
-	if err != nil {
-		log.Fatalf("Could not load certificate: %v", err)
+	// Set up certificate handling.
+	m := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(host),
+		Cache:      autocert.DirCache(certDir),
+		Email:      email,
 	}
 
 	// Set up serving mux.
-
-	// Start serving.
 	mux = http.NewServeMux()
 	mux.Handle("/", http.FileServer(&assetfs.AssetFS{Asset: data.Asset, AssetDir: data.AssetDir, AssetInfo: data.AssetInfo}))
 	mux.HandleFunc("/ip", func(w http.ResponseWriter, r *http.Request) {
@@ -148,18 +93,18 @@ func main() {
 
 	// Start serving.
 	config := &tls.Config{
-		MinVersion: tls.VersionTLS10,
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-			tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		},
-		Certificates:   []tls.Certificate{*certCache.Get()}, // This will never be used, but is required.
-		GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) { return certCache.Get(), nil },
+		// TODO(bran): why does this not work with LetsEncrypt?
+		//MinVersion: tls.VersionTLS10,
+		//CipherSuites: []uint16{
+		//	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		//	tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		//	tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		//	tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		//},
+		GetCertificate: m.GetCertificate,
 	}
 	server := &http.Server{
-		Addr:      ":10443",
+		Addr:      ":https",
 		Handler:   NewLoggingHandler("https", http.HandlerFunc(contentHandler)),
 		TLSConfig: config,
 	}
