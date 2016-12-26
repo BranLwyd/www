@@ -52,6 +52,7 @@ func contentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Connection", "close")
 	url := *r.URL
 	url.Scheme = "https"
 	url.Host = host
