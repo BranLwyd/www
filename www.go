@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"./data"
 
@@ -59,8 +60,11 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 
 func httpHandler() {
 	server := &http.Server{
-		Addr:    ":http",
-		Handler: NewLoggingHandler("http ", http.HandlerFunc(redirectHandler)),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Addr:         ":http",
+		Handler:      NewLoggingHandler("http ", http.HandlerFunc(redirectHandler)),
 	}
 	log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
 }
@@ -110,9 +114,12 @@ func main() {
 		GetCertificate: m.GetCertificate,
 	}
 	server := &http.Server{
-		Addr:      ":https",
-		Handler:   NewLoggingHandler("https", http.HandlerFunc(contentHandler)),
-		TLSConfig: config,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Addr:         ":https",
+		Handler:      NewLoggingHandler("https", http.HandlerFunc(contentHandler)),
+		TLSConfig:    config,
 	}
 	log.Printf("Serving")
 	log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
