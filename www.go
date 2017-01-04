@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,10 @@ import (
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"golang.org/x/crypto/acme/autocert"
+)
+
+var (
+	debug = flag.Bool("debug", false, "If set, serve content on HTTP 8080. Otherwise, serve redirects on HTTP 80 and content on HTTPS 443.")
 )
 
 const (
@@ -75,15 +80,7 @@ func serveHTTPRedirects() {
 }
 
 func main() {
-	go serveHTTPRedirects()
-
-	// Set up certificate handling.
-	m := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(host),
-		Cache:      autocert.DirCache(certDir),
-		Email:      email,
-	}
+	flag.Parse()
 
 	// Set up serving mux.
 	mux := http.NewServeMux()
@@ -99,33 +96,55 @@ func main() {
 		w.Header().Add("Content-Type", "text/plain")
 		fmt.Fprint(w, ip)
 	})
+	handler := NewSecureHeaderHandler(mux)
 
-	// Start serving.
-	config := &tls.Config{
-		PreferServerCipherSuites: true,
-		CurvePreferences: []tls.CurveID{
-			tls.CurveP256,
-			tls.X25519,
-		},
-		MinVersion: tls.VersionTLS12,
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		},
-		GetCertificate: m.GetCertificate,
+	if *debug {
+		server := &http.Server{
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+			Addr:         ":8080",
+			Handler:      NewLoggingHandler("debug", handler),
+		}
+		log.Printf("Serving debug")
+		log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
+	} else {
+		// Set up certificate handling.
+		m := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist(host),
+			Cache:      autocert.DirCache(certDir),
+			Email:      email,
+		}
+
+		// Start serving.
+		config := &tls.Config{
+			PreferServerCipherSuites: true,
+			CurvePreferences: []tls.CurveID{
+				tls.CurveP256,
+				tls.X25519,
+			},
+			MinVersion: tls.VersionTLS12,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			},
+			GetCertificate: m.GetCertificate,
+		}
+		server := &http.Server{
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+			Addr:         ":https",
+			Handler:      NewLoggingHandler("https", handler),
+			TLSConfig:    config,
+		}
+		log.Printf("Serving")
+		go serveHTTPRedirects()
+		log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
 	}
-	server := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		Addr:         ":https",
-		Handler:      NewLoggingHandler("https", NewSecureHeaderHandler(mux)),
-		TLSConfig:    config,
-	}
-	log.Printf("Serving")
-	log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
 }
