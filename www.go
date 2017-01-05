@@ -63,7 +63,6 @@ func NewSecureHeaderHandler(h http.Handler) http.Handler {
 
 func serveHTTPRedirects() {
 	server := &http.Server{
-		Addr: ":http",
 		Handler: NewLoggingHandler("http ", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Connection", "close")
 			url := *r.URL
@@ -129,7 +128,6 @@ func main() {
 			GetCertificate: m.GetCertificate,
 		}
 		server := &http.Server{
-			Addr:      ":https",
 			Handler:   NewLoggingHandler("https", handler),
 			TLSConfig: config,
 		}
