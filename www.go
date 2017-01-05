@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"./data"
 
@@ -64,10 +63,7 @@ func NewSecureHeaderHandler(h http.Handler) http.Handler {
 
 func serveHTTPRedirects() {
 	server := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		Addr:         ":http",
+		Addr: ":http",
 		Handler: NewLoggingHandler("http ", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Connection", "close")
 			url := *r.URL
@@ -100,11 +96,8 @@ func main() {
 
 	if *debug {
 		server := &http.Server{
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  120 * time.Second,
-			Addr:         ":8080",
-			Handler:      NewLoggingHandler("debug", handler),
+			Addr:    ":8080",
+			Handler: NewLoggingHandler("debug", handler),
 		}
 		log.Printf("Serving debug")
 		log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
@@ -136,12 +129,9 @@ func main() {
 			GetCertificate: m.GetCertificate,
 		}
 		server := &http.Server{
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  120 * time.Second,
-			Addr:         ":https",
-			Handler:      NewLoggingHandler("https", handler),
-			TLSConfig:    config,
+			Addr:      ":https",
+			Handler:   NewLoggingHandler("https", handler),
+			TLSConfig: config,
 		}
 		log.Printf("Serving")
 		go serveHTTPRedirects()
