@@ -97,48 +97,46 @@ func main() {
 	})
 	handler := NewSecureHeaderHandler(mux)
 
+	// Start serving.
 	if *debug {
 		server := &http.Server{
-			Addr:    ":8080",
+			Addr:    "127.0.0.1:8080",
 			Handler: NewLoggingHandler("debug", handler),
 		}
 		log.Printf("Serving debug")
 		log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
-	} else {
-		// Set up certificate handling.
-		m := autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			HostPolicy: autocert.HostWhitelist(host),
-			Cache:      autocert.DirCache(certDir),
-			Email:      email,
-		}
-
-		// Start serving.
-		server := &http.Server{
-			TLSConfig: &tls.Config{
-				PreferServerCipherSuites: true,
-				CurvePreferences: []tls.CurveID{
-					tls.CurveP256,
-					tls.X25519,
-				},
-				MinVersion: tls.VersionTLS12,
-				CipherSuites: []uint16{
-					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				},
-				GetCertificate: m.GetCertificate,
-			},
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  120 * time.Second,
-			Handler:      NewLoggingHandler("https", handler),
-		}
-		log.Printf("Serving")
-		go serveHTTPRedirects()
-		log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
 	}
+
+	m := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(host),
+		Cache:      autocert.DirCache(certDir),
+		Email:      email,
+	}
+	server := &http.Server{
+		TLSConfig: &tls.Config{
+			PreferServerCipherSuites: true,
+			CurvePreferences: []tls.CurveID{
+				tls.CurveP256,
+				tls.X25519,
+			},
+			MinVersion: tls.VersionTLS12,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			},
+			GetCertificate: m.GetCertificate,
+		},
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Handler:      NewLoggingHandler("https", handler),
+	}
+	log.Printf("Serving")
+	go serveHTTPRedirects()
+	log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
 }
