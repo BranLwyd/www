@@ -31,7 +31,13 @@ type loggingHandler struct {
 }
 
 func (lh loggingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] %s requested %s", lh.logName, r.RemoteAddr, r.RequestURI)
+	// Strip port from remote address, as the client port is not useful information.
+	ra := r.RemoteAddr
+	idx := strings.LastIndex(ra, ":")
+	if idx != -1 {
+		ra = ra[:idx]
+	}
+	log.Printf("[%s] %s requested %s", lh.logName, ra, r.RequestURI)
 	lh.h.ServeHTTP(w, r)
 }
 
