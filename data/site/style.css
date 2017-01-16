@@ -36,7 +36,7 @@ p {
 .header {
   padding: 2em;
   background: #ddd;
-  border-bottom: 2px solid gray;
+  border-bottom: 1px solid black;
 }
 
 .header h1 {
