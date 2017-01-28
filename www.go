@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -11,18 +12,21 @@ import (
 
 	"./data"
 
-	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"golang.org/x/crypto/acme/autocert"
-)
-
-var (
-	debug = flag.Bool("debug", false, "If set, serve content on HTTP 8080. Otherwise, serve redirects on HTTP 80 and content on HTTPS 443.")
 )
 
 const (
 	host    = "bran.land"
 	email   = "brandon.pitman@gmail.com"
 	certDir = "/var/lib/www/certs"
+)
+
+var (
+	debug = flag.Bool("debug", false, "If set, serve content on HTTP 8080. Otherwise, serve redirects on HTTP 80 and content on HTTPS 443.")
+
+	dataIndex   = data.MustAsset("index.html")
+	dataStyle   = data.MustAsset("style.css")
+	dataFavicon = data.MustAsset("favicon.ico")
 )
 
 type loggingHandler struct {
@@ -68,6 +72,45 @@ func NewSecureHeaderHandler(h http.Handler) http.Handler {
 	}
 }
 
+// filteredHandler filters a handler to only serve one path; anything else is given a 404.
+type filteredHandler struct {
+	allowedPath string
+	h           http.Handler
+}
+
+func (fh filteredHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.RequestURI != fh.allowedPath {
+		http.NotFound(w, r)
+	} else {
+		fh.h.ServeHTTP(w, r)
+	}
+}
+
+func NewFilteredHandler(allowedPath string, h http.Handler) http.Handler {
+	return &filteredHandler{
+		allowedPath: allowedPath,
+		h:           h,
+	}
+}
+
+// staticHandler serves static content from memory.
+type staticHandler struct {
+	content     []byte
+	contentType string
+}
+
+func (sh staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", sh.contentType)
+	http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(sh.content))
+}
+
+func NewStaticHandler(content []byte, contentType string) *staticHandler {
+	return &staticHandler{
+		content:     content,
+		contentType: contentType,
+	}
+}
+
 func serveHTTPRedirects() {
 	server := &http.Server{
 		ReadTimeout:  5 * time.Second,
@@ -89,7 +132,9 @@ func main() {
 
 	// Set up serving mux.
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(&assetfs.AssetFS{Asset: data.Asset, AssetDir: data.AssetDir, AssetInfo: data.AssetInfo}))
+	mux.Handle("/", NewFilteredHandler("/", NewStaticHandler(dataIndex, "text/html; charset=utf-8")))
+	mux.Handle("/style.css", NewStaticHandler(dataStyle, "text/css; charset=utf-8"))
+	mux.Handle("/favicon.ico", NewStaticHandler(dataFavicon, "image/x-icon"))
 	mux.HandleFunc("/ip", func(w http.ResponseWriter, r *http.Request) {
 		idx := strings.Index(r.RemoteAddr, ":")
 		if idx == -1 {
