@@ -24,9 +24,9 @@ const (
 var (
 	debug = flag.Bool("debug", false, "If set, serve content on HTTP 8080. Otherwise, serve redirects on HTTP 80 and content on HTTPS 443.")
 
-	dataIndex   = data.MustAsset("index.html")
-	dataStyle   = data.MustAsset("style.css")
-	dataFavicon = data.MustAsset("favicon.ico")
+	indexHandler   = Must(NewAssetHandler("index.html", "text/html; charset=utf-8"))
+	styleHandler   = Must(NewAssetHandler("style.css", "text/css; charset=utf-8"))
+	faviconHandler = Must(NewAssetHandler("favicon.ico", "image/x-icon"))
 )
 
 type loggingHandler struct {
@@ -97,18 +97,35 @@ func NewFilteredHandler(allowedPath string, h http.Handler) http.Handler {
 type staticHandler struct {
 	content     []byte
 	contentType string
+	modTime     time.Time
 }
 
 func (sh staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", sh.contentType)
-	http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(sh.content))
+	http.ServeContent(w, r, "", sh.modTime, bytes.NewReader(sh.content))
 }
 
-func NewStaticHandler(content []byte, contentType string) *staticHandler {
+func NewAssetHandler(assetName, contentType string) (*staticHandler, error) {
+	content, err := data.Asset(assetName)
+	if err != nil {
+		return nil, fmt.Errorf("could not get asset %q: %v", assetName, err)
+	}
+	info, err := data.AssetInfo(assetName)
+	if err != nil {
+		return nil, fmt.Errorf("could not get asset info for %q: %v", assetName, err)
+	}
 	return &staticHandler{
 		content:     content,
 		contentType: contentType,
+		modTime:     info.ModTime(),
+	}, nil
+}
+
+func Must(h http.Handler, err error) http.Handler {
+	if err != nil {
+		panic(err)
 	}
+	return h
 }
 
 func serveHTTPRedirects() {
@@ -132,9 +149,9 @@ func main() {
 
 	// Set up serving mux.
 	mux := http.NewServeMux()
-	mux.Handle("/", NewFilteredHandler("/", NewStaticHandler(dataIndex, "text/html; charset=utf-8")))
-	mux.Handle("/style.css", NewStaticHandler(dataStyle, "text/css; charset=utf-8"))
-	mux.Handle("/favicon.ico", NewStaticHandler(dataFavicon, "image/x-icon"))
+	mux.Handle("/", NewFilteredHandler("/", indexHandler))
+	mux.Handle("/style.css", styleHandler)
+	mux.Handle("/favicon.ico", faviconHandler)
 	mux.HandleFunc("/ip", func(w http.ResponseWriter, r *http.Request) {
 		idx := strings.Index(r.RemoteAddr, ":")
 		if idx == -1 {
