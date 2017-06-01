@@ -18,7 +18,7 @@ import (
 const (
 	host    = "bran.land"
 	email   = "brandon.pitman@gmail.com"
-	certDir = "/var/lib/www/certs"
+	certDir = "/home/www/certs"
 )
 
 var (
