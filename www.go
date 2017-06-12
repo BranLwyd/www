@@ -152,17 +152,6 @@ func main() {
 	mux.Handle("/", NewFilteredHandler("/", indexHandler))
 	mux.Handle("/style.css", styleHandler)
 	mux.Handle("/favicon.ico", faviconHandler)
-	mux.HandleFunc("/ip", func(w http.ResponseWriter, r *http.Request) {
-		idx := strings.LastIndex(r.RemoteAddr, ":")
-		if idx == -1 {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		ip := r.RemoteAddr[:idx]
-
-		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-		fmt.Fprint(w, ip)
-	})
 	handler := NewSecureHeaderHandler(mux)
 
 	// Start serving.
