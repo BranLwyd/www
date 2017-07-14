@@ -40,8 +40,8 @@ type secureHeaderHandler struct {
 
 func (shh secureHeaderHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-	w.Header().Add("Content-Security-Policy", "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com")
-	w.Header().Add("X-Frame-Options", "SAMEORIGIN")
+	w.Header().Add("Content-Security-Policy", "default-src 'self'")
+	w.Header().Add("X-Frame-Options", "DENY")
 	w.Header().Add("X-XSS-Protection", "1; mode=block")
 	w.Header().Add("X-Content-Type-Options", "nosniff")
 

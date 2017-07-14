@@ -16,7 +16,7 @@ body {
   font-size: 14px;
   background-color: #ffffff;
   color: #424242;
-  margin: -96px auto 80px;
+  margin: 32px auto 80px;
   min-width: 30em;
   max-width: 939px;
   width: calc(80% - 138px);
@@ -40,7 +40,6 @@ p {
 }
 
 .header h1 {
-  font-family: "Droid Serif", serif;
   text-align: center;
   letter-spacing: 3px;
 }
