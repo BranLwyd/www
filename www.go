@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"./data"
+	"github.com/BranLwyd/www/data"
 )
 
 type loggingHandler struct {
