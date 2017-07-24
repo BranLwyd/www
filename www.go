@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BranLwyd/www/data"
+	"github.com/BranLwyd/www/assets"
 )
 
 type loggingHandler struct {
@@ -88,11 +88,11 @@ func (sh staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewAssetHandler(assetName, contentType string) (*staticHandler, error) {
-	content, err := data.Asset(assetName)
+	content, err := assets.Asset(assetName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get asset %q: %v", assetName, err)
 	}
-	info, err := data.AssetInfo(assetName)
+	info, err := assets.AssetInfo(assetName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get asset info for %q: %v", assetName, err)
 	}
