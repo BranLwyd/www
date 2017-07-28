@@ -3,17 +3,18 @@ bran.land server code
 
 ## Build/deploy instructions
 
+Requires Bazel to build.
+
 On the build machine:
 ```shell
-go generate ./data
-go build
-scp www bran.land:www
+$ bazel build :www
+$ scp www bran.land:www
 ```
 
 On the server:
 ```shell
-sudo chown www:www www
-sudo setcap 'cap_net_bind_service=+ep' www
-sudo mv www /var/lib/www/www
-sudo systemctl restart www
+# chown www:www www
+# setcap 'cap_net_bind_service=+ep' www
+# mv www /home/www/www
+# systemctl restart www
 ```
