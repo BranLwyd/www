@@ -40,7 +40,8 @@ genrule(
     name = "assets_go",
     srcs = [":assets_files"],
     outs = ["assets.go"],
-    cmd = "go-bindata -o $@ --nomemcopy --nocompress --pkg=assets --prefix=assets/ $(locations :assets_files)",
+    cmd = "$(location @com_github_jteeuwen_go-bindata//go-bindata) -o $@ --nomemcopy --nocompress --pkg=assets --prefix=assets/ $(locations :assets_files)",
+    tools = ["@com_github_jteeuwen_go-bindata//go-bindata"],
 )
 
 go_library(
