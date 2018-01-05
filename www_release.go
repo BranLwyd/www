@@ -26,8 +26,8 @@ func serve(h http.Handler) {
 		TLSConfig: &tls.Config{
 			PreferServerCipherSuites: true,
 			CurvePreferences: []tls.CurveID{
-				tls.CurveP256,
 				tls.X25519,
+				tls.CurveP256,
 			},
 			MinVersion:             tls.VersionTLS12,
 			SessionTicketsDisabled: true,
