@@ -1,4 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_prefix", "go_binary", "go_library")
+
 go_prefix("github.com/BranLwyd/www")
 
 ##
@@ -10,6 +11,7 @@ go_binary(
         "www.go",
         "www_release.go",
     ],
+    pure = "on",
     deps = [
         "//:assets",
         "@org_golang_x_crypto//acme/autocert:go_default_library",
@@ -22,6 +24,7 @@ go_binary(
         "www.go",
         "www_debug.go",
     ],
+    pure = "on",
     deps = [
         "//:assets",
     ],
