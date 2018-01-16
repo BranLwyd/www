@@ -46,23 +46,21 @@ func serve(h http.Handler) {
 		IdleTimeout:  120 * time.Second,
 		Handler:      NewLoggingHandler("https", h),
 	}
+
 	log.Printf("Serving")
-	go serveHTTPRedirects()
+	// Serve HTTP redirects & ACME challenge traffic...
+	go serveHTTPRedirects(m.HTTPHandler(nil))
+
+	// ...and serve content on HTTPS.
 	log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
 }
 
-func serveHTTPRedirects() {
+func serveHTTPRedirects(h http.Handler) {
 	server := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
-		Handler: NewLoggingHandler("http ", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Connection", "close")
-			url := *r.URL
-			url.Scheme = "https"
-			url.Host = host
-			http.Redirect(w, r, url.String(), http.StatusMovedPermanently)
-		})),
+		Handler:      h,
 	}
 	log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
 }
