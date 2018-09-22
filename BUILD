@@ -1,6 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_prefix", "go_binary", "go_library")
-
-go_prefix("github.com/BranLwyd/www")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 ##
 ## Binaries
@@ -49,4 +47,5 @@ genrule(
 go_library(
     name = "assets",
     srcs = ["assets.go"],
+    importpath = "github.com/BranLwyd/www/assets",
 )
