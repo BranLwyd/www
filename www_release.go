@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -40,6 +41,7 @@ func serve(h http.Handler) {
 				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			},
 			GetCertificate: m.GetCertificate,
+			NextProtos:     []string{"h2", acme.ALPNProto},
 		},
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -48,19 +50,5 @@ func serve(h http.Handler) {
 	}
 
 	log.Printf("Serving")
-	// Serve HTTP redirects & ACME challenge traffic...
-	go serveHTTPRedirects(m.HTTPHandler(nil))
-
-	// ...and serve content on HTTPS.
 	log.Fatalf("ListenAndServeTLS: %v", server.ListenAndServeTLS("", ""))
-}
-
-func serveHTTPRedirects(h http.Handler) {
-	server := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		Handler:      h,
-	}
-	log.Fatalf("ListenAndServe: %v", server.ListenAndServe())
 }

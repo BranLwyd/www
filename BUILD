@@ -12,6 +12,7 @@ go_binary(
     pure = "on",
     deps = [
         "//:assets",
+        "@org_golang_x_crypto//acme:go_default_library",
         "@org_golang_x_crypto//acme/autocert:go_default_library",
     ],
 )

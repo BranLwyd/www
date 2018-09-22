@@ -23,7 +23,7 @@ gazelle_dependencies()
 
 go_repository(
     name = "org_golang_x_crypto",
-    commit = "13931e22f9e72ea58bb73048bc752b48c6d4d4ac",
+    commit = "0e37d006457bf46f9e6692014ba72ef82c33022c",
     importpath = "golang.org/x/crypto",
 )
 
