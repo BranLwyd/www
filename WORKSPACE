@@ -24,9 +24,3 @@ go_repository(
     commit = "74cb1d3d52f4c01cbfb44c1b50d204462f3124c7",
     importpath = "golang.org/x/crypto",
 )
-
-go_repository(
-    name = "com_github_jteeuwen_go-bindata",
-    commit = "a0ff2567cfb70903282db057e799fd826784d41d",
-    importpath = "github.com/jteeuwen/go-bindata",
-)

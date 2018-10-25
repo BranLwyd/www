@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BranLwyd/www/assets"
@@ -79,28 +82,49 @@ func NewFilteredHandler(allowedPath string, h http.Handler) http.Handler {
 type staticHandler struct {
 	content     []byte
 	contentType string
-	modTime     time.Time
+
+	tagMu sync.RWMutex // protects tag
+	tag   string
 }
 
-func (sh staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (sh *staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", sh.contentType)
-	http.ServeContent(w, r, "", sh.modTime, bytes.NewReader(sh.content))
+	w.Header().Set("ETag", sh.etag())
+	http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(sh.content))
+}
+
+func (sh *staticHandler) etag() string {
+	// Fast path: ETag has already been computed.
+	sh.tagMu.RLock()
+	if sh.tag != "" {
+		defer sh.tagMu.RUnlock()
+		return sh.tag
+	}
+	sh.tagMu.RUnlock()
+
+	// Slow path: probably need to compute ETag.
+	sh.tagMu.Lock()
+	defer sh.tagMu.Unlock()
+	if sh.tag != "" {
+		// Someone computed it before we could grab the lock. Just return their value.
+		return sh.tag
+	}
+	h := sha256.Sum256(sh.content)
+	sh.tag = fmt.Sprintf(`"%s"`, base64.RawURLEncoding.EncodeToString(h[:]))
+	return sh.tag
 }
 
 func NewAssetHandler(assetName, contentType string) (*staticHandler, error) {
-	content, err := assets.Asset(assetName)
-	if err != nil {
-		return nil, fmt.Errorf("could not get asset %q: %v", assetName, err)
+	content, ok := assets.Asset[assetName]
+	if !ok {
+		return nil, fmt.Errorf("no such asset %q", assetName)
 	}
-	info, err := assets.AssetInfo(assetName)
-	if err != nil {
-		return nil, fmt.Errorf("could not get asset info for %q: %v", assetName, err)
-	}
-	return &staticHandler{
+	sh := &staticHandler{
 		content:     content,
 		contentType: contentType,
-		modTime:     info.ModTime(),
-	}, nil
+	}
+	go sh.etag() // aggressively compute etag so that it will probably be available by the first request
+	return sh, nil
 }
 
 func Must(h http.Handler, err error) http.Handler {
@@ -112,8 +136,8 @@ func Must(h http.Handler, err error) http.Handler {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("/", NewFilteredHandler("/", Must(NewAssetHandler("index.html", "text/html; charset=utf-8"))))
-	mux.Handle("/style.css", Must(NewAssetHandler("style.css", "text/css; charset=utf-8")))
-	mux.Handle("/favicon.ico", Must(NewAssetHandler("favicon.ico", "image/x-icon")))
+	mux.Handle("/", NewFilteredHandler("/", Must(NewAssetHandler("assets/index.html", "text/html; charset=utf-8"))))
+	mux.Handle("/style.css", Must(NewAssetHandler("assets/style.css", "text/css; charset=utf-8")))
+	mux.Handle("/favicon.ico", Must(NewAssetHandler("assets/favicon.ico", "image/x-icon")))
 	serve(NewSecureHeaderHandler(mux))
 }

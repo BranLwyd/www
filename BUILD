@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_embed_data")
 
 ##
 ## Binaries
@@ -24,29 +24,21 @@ go_binary(
         "www_debug.go",
     ],
     pure = "on",
-    deps = [
-        "//:assets",
-    ],
+    deps = ["//:assets"],
 )
 
 ##
 ## Static assets
 ##
-filegroup(
-    name = "assets_files",
+go_embed_data(
+    name = "embed_assets",
     srcs = glob(["assets/**/*"]),
-)
-
-genrule(
-    name = "assets_go",
-    srcs = [":assets_files"],
-    outs = ["assets.go"],
-    cmd = "$(location @com_github_jteeuwen_go-bindata//go-bindata) -o $@ --nomemcopy --nocompress --pkg=assets --prefix=assets/ $(locations :assets_files)",
-    tools = ["@com_github_jteeuwen_go-bindata//go-bindata"],
+    package = "assets",
+    var = "Asset",
 )
 
 go_library(
     name = "assets",
-    srcs = ["assets.go"],
+    srcs = [":embed_assets"],
     importpath = "github.com/BranLwyd/www/assets",
 )
