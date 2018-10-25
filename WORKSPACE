@@ -1,9 +1,7 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "97cf62bdef33519412167fd1e4b0810a318a7c234f5f8dc4f53e2da86241c492",
-    urls = ["https://github.com/bazelbuild/rules_go/releases/download/0.15.3/rules_go-0.15.3.tar.gz"],
+    sha256 = "f5127a8f911468cd0b2d7a141f17253db81177523e4429796e14d429f5444f5f",
+    url = "https://github.com/bazelbuild/rules_go/releases/download/0.16.1/rules_go-0.16.1.tar.gz",
 )
 
 http_archive(
@@ -23,7 +21,7 @@ gazelle_dependencies()
 
 go_repository(
     name = "org_golang_x_crypto",
-    commit = "0e37d006457bf46f9e6692014ba72ef82c33022c",
+    commit = "74cb1d3d52f4c01cbfb44c1b50d204462f3124c7",
     importpath = "golang.org/x/crypto",
 )
 
