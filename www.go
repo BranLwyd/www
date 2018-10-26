@@ -83,8 +83,8 @@ type staticHandler struct {
 	content     []byte
 	contentType string
 
-	tagMu sync.RWMutex // protects tag
-	tag   string
+	tagOnce sync.Once
+	tag     string
 }
 
 func (sh *staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -94,23 +94,10 @@ func (sh *staticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sh *staticHandler) etag() string {
-	// Fast path: ETag has already been computed.
-	sh.tagMu.RLock()
-	if sh.tag != "" {
-		defer sh.tagMu.RUnlock()
-		return sh.tag
-	}
-	sh.tagMu.RUnlock()
-
-	// Slow path: probably need to compute ETag.
-	sh.tagMu.Lock()
-	defer sh.tagMu.Unlock()
-	if sh.tag != "" {
-		// Someone computed it before we could grab the lock. Just return their value.
-		return sh.tag
-	}
-	h := sha256.Sum256(sh.content)
-	sh.tag = fmt.Sprintf(`"%s"`, base64.RawURLEncoding.EncodeToString(h[:]))
+	sh.tagOnce.Do(func() {
+		h := sha256.Sum256(sh.content)
+		sh.tag = fmt.Sprintf(`"%s"`, base64.RawURLEncoding.EncodeToString(h[:]))
+	})
 	return sh.tag
 }
 
@@ -123,7 +110,7 @@ func NewAssetHandler(assetName, contentType string) (*staticHandler, error) {
 		content:     content,
 		contentType: contentType,
 	}
-	go sh.etag() // aggressively compute etag so that it will probably be available by the first request
+	go sh.etag() // eagerly compute etag so that it will probably be available by the first request
 	return sh, nil
 }
 
