@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"golang.org/x/crypto/acme"
@@ -16,10 +15,6 @@ const (
 	email   = "brandon.pitman@gmail.com"
 	certDir = "/home/www/certs"
 )
-
-func init() {
-	os.Setenv("GODEBUG", os.Getenv("GODEBUG")+",tls13=1") // enable TLS 1.3; remove once enabled by default
-}
 
 func serve(h http.Handler) {
 	m := autocert.Manager{

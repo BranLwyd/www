@@ -19,10 +19,6 @@ var (
 	hostname = flag.String("hostname", "", "The hostname to serve on. Defaults to os.Hostname().")
 )
 
-func init() {
-	os.Setenv("GODEBUG", os.Getenv("GODEBUG")+",tls13=1") // enable TLS 1.3; remove once enabled by default
-}
-
 func serve(h http.Handler) {
 	// Figure out hostname if it is not set.
 	if *hostname == "" {
