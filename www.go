@@ -43,10 +43,13 @@ type secureHeaderHandler struct {
 
 func (shh secureHeaderHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-	w.Header().Add("Content-Security-Policy", "default-src 'self'")
 	w.Header().Add("X-Frame-Options", "DENY")
 	w.Header().Add("X-XSS-Protection", "1; mode=block")
 	w.Header().Add("X-Content-Type-Options", "nosniff")
+
+	// Chrome's PDF renderer uses inline CSS, which is broken by strict CSPs (!).
+	// TODO: remove the style-src directive once Chrome fixes its PDF renderer
+	w.Header().Add("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'")
 
 	shh.h.ServeHTTP(w, r)
 }
@@ -126,5 +129,6 @@ func main() {
 	mux.Handle("/", NewFilteredHandler("/", Must(NewAssetHandler("assets/index.html", "text/html; charset=utf-8"))))
 	mux.Handle("/style.css", Must(NewAssetHandler("assets/style.css", "text/css; charset=utf-8")))
 	mux.Handle("/favicon.ico", Must(NewAssetHandler("assets/favicon.ico", "image/x-icon")))
+	mux.Handle("/resume.pdf", Must(NewAssetHandler("assets/resume.pdf", "application/pdf")))
 	serve(NewSecureHeaderHandler(mux))
 }
