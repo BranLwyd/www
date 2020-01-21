@@ -35,7 +35,7 @@ func serve(h http.Handler) {
 				tls.X25519,
 				tls.CurveP256,
 			},
-			MinVersion:             tls.VersionTLS12, // TODO: reset to TLS 1.3 once supported by acme/autocert and Let's Encrypt
+			MinVersion:             tls.VersionTLS13,
 			SessionTicketsDisabled: true,
 			GetCertificate:         m.GetCertificate,
 			NextProtos:             []string{"h2", acme.ALPNProto},
