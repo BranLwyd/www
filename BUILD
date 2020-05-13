@@ -7,6 +7,7 @@ go_binary(
     name = "www",
     srcs = [
         "www.go",
+        "www_flower.go",
         "www_release.go",
     ],
     pure = "on",
@@ -22,9 +23,12 @@ go_binary(
     srcs = [
         "www.go",
         "www_debug.go",
+        "www_flower.go",
     ],
     pure = "on",
-    deps = ["//:assets"],
+    deps = [
+        "//:assets",
+    ],
 )
 
 ##

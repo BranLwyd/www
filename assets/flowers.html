@@ -1,0 +1,51 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>AC:NH Flower Breeding Tool</title>
+	<link rel="stylesheet" type='text/css' href="/style.css">
+</head>
+<body>
+	<div class="content">
+		<div class="header">
+			<h1>AC:NH Flower Breeding Tool</h1>
+		</div>
+
+		<div class="inner-content">
+			<p>Enter genotypes in the format "RrYyWw" (or "RrYyWwBb" for roses), then click "Breed 'Em!" to see what you might get!</p>
+
+			<form action="" method="get">
+				<div>
+					<label for="species">Species: </label>
+					<select name="species">
+						<option value="cosmos"{{if eq .Species "cosmos"}} selected{{end}}>Cosmos</option>
+						<option value="hyacinths"{{if eq .Species "hyacinths"}} selected{{end}}>Hyacinths</option>
+						<option value="lilies"{{if eq .Species "lilies"}} selected{{end}}>Lilies</option>
+						<option value="mums"{{if eq .Species "mums"}} selected{{end}}>Mums</option>
+						<option value="pansies"{{if eq .Species "pansies"}} selected{{end}}>Pansiess</option>
+						<option value="roses"{{if eq .Species "roses"}} selected{{end}}>Roses</option>
+						<option value="tulips"{{if eq .Species "tulips"}} selected{{end}}>Tulips</option>
+						<option value="windflowers"{{if eq .Species "windflowers"}} selected{{end}}>Windflowers</option>
+					</select>
+				</div>
+				<div><label for="firstGenotype">First genotype: </label><input type="text" name="firstGenotype" id="firstGenotype" value="{{.FirstGenotype}}"></div>
+				<div><label for="secondGenotype">Second genotype: </label><input type="text" name="secondGenotype" id="secondGenotype" value="{{.SecondGenotype}}"></div>
+				<div><input type="submit" value="Breed 'em!"></div>
+
+				{{if .Error}}<div><b>{{.Error}}</b></div>{{end}}
+
+				{{if .Results}}
+				<div>
+				<br/>
+				<b>Results:</b>
+				<ul>
+				{{range .Results}}
+					<li>{{.}}</li>
+				{{end}}
+				</ul>
+				</div>
+				{{end}}
+			</form>
+		</div>
+	</div>
+</body>
+</html>

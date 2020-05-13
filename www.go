@@ -127,6 +127,7 @@ func Must(h http.Handler, err error) http.Handler {
 func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", NewFilteredHandler("/", Must(NewAssetHandler("assets/index.html", "text/html; charset=utf-8"))))
+	mux.Handle("/flowers", flowerHandler{})
 	mux.Handle("/style.css", Must(NewAssetHandler("assets/style.css", "text/css; charset=utf-8")))
 	mux.Handle("/favicon.ico", Must(NewAssetHandler("assets/favicon.ico", "image/x-icon")))
 	mux.Handle("/resume.pdf", Must(NewAssetHandler("assets/resume.pdf", "application/pdf")))
