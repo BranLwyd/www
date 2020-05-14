@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 	"time"
 
@@ -32,12 +33,22 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			goto writeResult
 		}
 
-		ga, err := s.ParseGenotype(firstGenotypeParam)
+		gs, err := NewGenotypeSerdeFromExample(firstGenotypeParam)
 		if err != nil {
 			errStr = fmt.Sprintf("Couldn't parse first genotype: %v", err)
 			goto writeResult
 		}
-		gb, err := s.ParseGenotype(secondGenotypeParam)
+		if gs.GeneCount() != s.geneCount {
+			errStr = fmt.Sprintf("First genotype has wrong number of genes (%d, wanted %d)", gs.GeneCount(), s.geneCount)
+			goto writeResult
+		}
+
+		ga, err := gs.DeserializeGenotype(firstGenotypeParam)
+		if err != nil {
+			errStr = fmt.Sprintf("Couldn't parse first genotype: %v", err)
+			goto writeResult
+		}
+		gb, err := gs.DeserializeGenotype(secondGenotypeParam)
 		if err != nil {
 			errStr = fmt.Sprintf("Couldn't parse second genotype: %v", err)
 			goto writeResult
@@ -52,7 +63,7 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			g := Genotype(g)
-			results = append(results, fmt.Sprintf("%d: %s (%s)", p, s.RenderGenotype(g), s.phenotypes[g]))
+			results = append(results, fmt.Sprintf("%d: %s (%s)", p, gs.SerializeGenotype(g), s.phenotypes[g]))
 		}
 	}
 
@@ -81,7 +92,7 @@ writeResult:
 
 var (
 	species = map[string]Species{
-		"cosmos": MustSpecies("Mums", 3, map[string]string{
+		"cosmos": MustSpecies("Mums", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "White",
@@ -111,7 +122,7 @@ var (
 			"RRYYWW": "Red",
 		}),
 
-		"hyacinths": MustSpecies("Mums", 3, map[string]string{
+		"hyacinths": MustSpecies("Mums", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "Blue",
@@ -141,7 +152,7 @@ var (
 			"RRYYWW": "Purple",
 		}),
 
-		"lilies": MustSpecies("Mums", 3, map[string]string{
+		"lilies": MustSpecies("Mums", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "White",
@@ -171,7 +182,7 @@ var (
 			"RRYYWW": "White",
 		}),
 
-		"mums": MustSpecies("Mums", 3, map[string]string{
+		"mums": MustSpecies("Mums", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "Purple",
@@ -201,7 +212,7 @@ var (
 			"RRYYWW": "Red",
 		}),
 
-		"pansies": MustSpecies("Mums", 3, map[string]string{
+		"pansies": MustSpecies("Mums", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "Blue",
@@ -231,7 +242,7 @@ var (
 			"RRYYWW": "Purple",
 		}),
 
-		"roses": MustSpecies("Roses", 4, map[string]string{
+		"roses": MustSpecies("Roses", map[string]string{
 			"rryywwbb": "White",
 			"rryywwBb": "White",
 			"rryywwBB": "White",
@@ -315,7 +326,7 @@ var (
 			"RRYYWWBB": "White",
 		}),
 
-		"tulips": MustSpecies("Tulips", 3, map[string]string{
+		"tulips": MustSpecies("Tulips", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "White",
@@ -345,7 +356,7 @@ var (
 			"RRYYWW": "Purple",
 		}),
 
-		"windflowers": MustSpecies("Windflowers", 3, map[string]string{
+		"windflowers": MustSpecies("Windflowers", map[string]string{
 			"rryyww": "White",
 			"rryyWw": "White",
 			"rryyWW": "Blue",
@@ -375,11 +386,6 @@ var (
 			"RRYYWW": "Purple",
 		}),
 	}
-
-	gene0 = [3]string{"rr", "Rr", "RR"}
-	gene1 = [3]string{"yy", "Yy", "YY"}
-	gene2 = [3]string{"ww", "Ww", "WW"}
-	gene3 = [3]string{"bb", "Bb", "BB"}
 )
 
 // Species represents a specific species of flower, such as Windflower or Mum.
@@ -389,86 +395,45 @@ type Species struct {
 	phenotypes map[Genotype]string // phenotypes by genotype
 }
 
-func NewSpecies(name string, geneCount int, phenotypes map[string]string) (Species, error) {
-	s := Species{name: name, geneCount: geneCount}
-	if geneCount != 3 && geneCount != 4 {
-		return Species{}, fmt.Errorf("Gene count is %d, must be 3 or 4", geneCount)
-	}
-
-	if geneCount == 3 && len(phenotypes) != 27 {
-		return Species{}, fmt.Errorf("Got %d phenotypes, expected 27", len(phenotypes))
-	}
-	if geneCount == 4 && len(phenotypes) != 81 {
-		return Species{}, fmt.Errorf("Got %d phenotypes, expected 81", len(phenotypes))
-	}
-
+func NewSpecies(name string, phenotypes map[string]string) (Species, error) {
+	s := Species{name: name}
+	gsInit := false
+	var gs GenotypeSerde
 	pts := map[Genotype]string{}
-	for g, p := range phenotypes {
-		g, err := s.ParseGenotype(g)
+	for gStr, p := range phenotypes {
+		if !gsInit {
+			serde, err := NewGenotypeSerdeFromExample(gStr)
+			if err != nil {
+				return Species{}, fmt.Errorf("couldn't parse genotype %q: %v", gStr, err)
+			}
+			gs, gsInit = serde, true
+			s.geneCount = gs.GeneCount()
+		}
+
+		g, err := gs.DeserializeGenotype(gStr)
 		if err != nil {
 			return Species{}, err
 		}
 		pts[g] = p
 	}
 	s.phenotypes = pts
+
+	if s.geneCount == 3 && len(phenotypes) != 27 {
+		return Species{}, fmt.Errorf("Got %d phenotypes, expected 27", len(phenotypes))
+	}
+	if s.geneCount == 4 && len(phenotypes) != 81 {
+		return Species{}, fmt.Errorf("Got %d phenotypes, expected 81", len(phenotypes))
+	}
+
 	return s, nil
 }
 
-func MustSpecies(name string, geneCount int, phenotypes map[string]string) Species {
-	s, err := NewSpecies(name, geneCount, phenotypes)
+func MustSpecies(name string, phenotypes map[string]string) Species {
+	s, err := NewSpecies(name, phenotypes)
 	if err != nil {
 		panic(err)
 	}
 	return s
-}
-
-func (s Species) ParseGenotype(genotype string) (Genotype, error) {
-	var rslt Genotype
-
-	if s.geneCount == 3 && len(genotype) != 6 {
-		return 0, fmt.Errorf("genotype %q has wrong length (expected 6)", genotype)
-	}
-	if s.geneCount == 4 && len(genotype) != 8 {
-		return 0, fmt.Errorf("genotype %q has wrong length (expected 8)", genotype)
-	}
-
-	for _, x := range []struct {
-		gene   [3]string
-		offset uint
-	}{
-		{gene0, 0},
-		{gene1, 2},
-		{gene2, 4},
-		{gene3, 6},
-	} {
-		if len(genotype) == 6 && x.gene == gene3 {
-			break
-		}
-
-		found := false
-		for i, v := range x.gene {
-			if v == genotype[x.offset:x.offset+2] {
-				rslt |= Genotype(i << x.offset)
-				found = true
-				break
-			}
-		}
-		if !found {
-			return 0, fmt.Errorf("unparsable gene %q", genotype[x.offset:x.offset+2])
-		}
-	}
-	return rslt, nil
-}
-
-func (s Species) RenderGenotype(g Genotype) string {
-	switch s.geneCount {
-	case 3:
-		return fmt.Sprintf("%s%s%s", gene0[g.gene0()], gene1[g.gene1()], gene2[g.gene2()])
-	case 4:
-		return fmt.Sprintf("%s%s%s%s", gene0[g.gene0()], gene1[g.gene1()], gene2[g.gene2()], gene3[g.gene3()])
-	default:
-		panic(fmt.Sprintf("Gene count is %d, expect 3 or 4", s.geneCount))
-	}
 }
 
 func (s Species) ToGeneticDistribution(g Genotype) GeneticDistribution {
@@ -496,6 +461,106 @@ func (g Genotype) gene0() uint8 { return uint8((g >> 0) & 0b11) }
 func (g Genotype) gene1() uint8 { return uint8((g >> 2) & 0b11) }
 func (g Genotype) gene2() uint8 { return uint8((g >> 4) & 0b11) }
 func (g Genotype) gene3() uint8 { return uint8((g >> 6) & 0b11) }
+
+type GenotypeSerde struct {
+	gene0 [3]string // contents of these will be something like {"rr", "Rr", "RR"}
+	gene1 [3]string
+	gene2 [3]string
+	gene3 [3]string // {"", "", ""} for 3-gene species
+}
+
+func (gs GenotypeSerde) GeneCount() int {
+	if gs.gene3[0] == "" {
+		return 3
+	}
+	return 4
+}
+
+func NewGenotypeSerdeFromExample(genotype string) (GenotypeSerde, error) {
+	if len(genotype) != 6 && len(genotype) != 8 {
+		return GenotypeSerde{}, fmt.Errorf("genotype %q has wrong length (expected 6 or 8)", genotype)
+	}
+
+	genesFrom := func(gene string) ([3]string, error) {
+		lo, hi := strings.ToLower(gene[0:1]), strings.ToUpper(gene[0:1])
+		genes := [3]string{lo + lo, hi + lo, hi + hi}
+		if gene != genes[0] && gene != genes[1] && gene != genes[2] {
+			return [3]string{}, fmt.Errorf("could not parse gene %q", gene)
+		}
+		return genes, nil
+	}
+
+	gene0, err := genesFrom(genotype[0:2])
+	if err != nil {
+		return GenotypeSerde{}, err
+	}
+	gene1, err := genesFrom(genotype[2:4])
+	if err != nil {
+		return GenotypeSerde{}, err
+	}
+	gene2, err := genesFrom(genotype[4:6])
+	if err != nil {
+		return GenotypeSerde{}, err
+	}
+	var gene3 [3]string
+	if len(genotype) == 8 {
+		gene3, err = genesFrom(genotype[6:8])
+		if err != nil {
+			return GenotypeSerde{}, err
+		}
+	}
+
+	if gene0 == gene1 || gene0 == gene2 || gene0 == gene3 || gene1 == gene2 || gene1 == gene3 || gene2 == gene3 {
+		return GenotypeSerde{}, fmt.Errorf("duplicate gene letters (%q, %q, %q, %q)", gene0[0], gene1[0], gene2[0], gene3[0])
+	}
+
+	return GenotypeSerde{gene0, gene1, gene2, gene3}, nil
+}
+
+func (gs GenotypeSerde) DeserializeGenotype(genotype string) (Genotype, error) {
+	var rslt Genotype
+
+	if gs.gene3[0] == "" && len(genotype) != 6 {
+		return 0, fmt.Errorf("genotype %q has wrong length (expected 6)", genotype)
+	}
+	if gs.gene3[0] != "" && len(genotype) != 8 {
+		return 0, fmt.Errorf("genotype %q has wrong length (expected 8)", genotype)
+	}
+
+	for _, x := range []struct {
+		gene   [3]string
+		offset uint
+	}{
+		{gs.gene0, 0},
+		{gs.gene1, 2},
+		{gs.gene2, 4},
+		{gs.gene3, 6},
+	} {
+		if x.gene[0] == "" {
+			break
+		}
+
+		found := false
+		for i, v := range x.gene {
+			if v == genotype[x.offset:x.offset+2] {
+				rslt |= Genotype(i << x.offset)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return 0, fmt.Errorf("unparsable gene %q", genotype[x.offset:x.offset+2])
+		}
+	}
+	return rslt, nil
+}
+
+func (gs GenotypeSerde) SerializeGenotype(g Genotype) string {
+	if gs.gene3[0] == "" {
+		return fmt.Sprintf("%s%s%s", gs.gene0[g.gene0()], gs.gene1[g.gene1()], gs.gene2[g.gene2()])
+	}
+	return fmt.Sprintf("%s%s%s%s", gs.gene0[g.gene0()], gs.gene1[g.gene1()], gs.gene2[g.gene2()], gs.gene3[g.gene3()])
+}
 
 const (
 	threeGeneGenotypeCount = 64
