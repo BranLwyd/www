@@ -24,7 +24,13 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	firstGenotypeParam := r.Form.Get("firstGenotype")
 	secondGenotypeParam := r.Form.Get("secondGenotype")
 
-	var results []string
+	type result struct {
+		Odds      string
+		Genotype  string
+		Phenotype string
+	}
+
+	var results []result
 	var errStr string
 	if speciesParam != "" && firstGenotypeParam != "" && secondGenotypeParam != "" {
 		s, ok := species[speciesParam]
@@ -58,12 +64,24 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		gdb := s.ToGeneticDistribution(gb)
 		gdRslt := gda.Breed(gdb)
 
+		var totalOdds uint64
+		for _, p := range gdRslt.dist {
+			totalOdds += p
+		}
 		for g, p := range gdRslt.dist {
 			if p == 0 {
 				continue
 			}
 			g := Genotype(g)
-			results = append(results, fmt.Sprintf("%d: %s (%s)", p, gs.SerializeGenotype(g), s.phenotypes[g]))
+
+			gcd := gcd(p, totalOdds)
+			num, den := p/gcd, totalOdds/gcd
+
+			results = append(results, result{
+				Odds:      fmt.Sprintf("%.02f%% (%d/%d)", 100*float64(p)/float64(totalOdds), num, den),
+				Genotype:  gs.SerializeGenotype(g),
+				Phenotype: s.phenotypes[g],
+			})
 		}
 	}
 
@@ -73,7 +91,7 @@ writeResult:
 		Species        string
 		FirstGenotype  string
 		SecondGenotype string
-		Results        []string
+		Results        []result
 		Error          string
 	}{
 		Species:        speciesParam,

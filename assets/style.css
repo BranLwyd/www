@@ -43,3 +43,46 @@ p {
   text-align: center;
   letter-spacing: 3px;
 }
+
+form {
+  display: table;
+}
+
+form p {
+  display: table-row;
+}
+
+form label {
+  display: table-cell;
+  padding-right: 0.5em;
+}
+
+form select,input[type=text] {
+  display: table-cell;
+  width: 100%;
+}
+
+form input[type=text] {
+  font-family: monospace;
+}
+
+.flower-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 1em;
+  font-size: 14px;
+}
+
+.flower-table td,th {
+  border: 1px solid #f5f5f5;
+  text-align: left;
+  padding: 0.5em;
+}
+
+.flower-table tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+
+.flower-table .genotype-cell {
+	font-family: monospace;
+}

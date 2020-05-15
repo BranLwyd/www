@@ -14,37 +14,44 @@
 			<p>Enter genotypes in the format "RrYyWw" (or "RrYyWwSs" for roses), then click "Breed 'Em!" to see what you might get.</p>
 
 			<form action="" method="get">
-				<div>
+				<p>
 					<label for="species">Species: </label>
 					<select name="species">
 						<option value="cosmos"{{if eq .Species "cosmos"}} selected{{end}}>Cosmos</option>
 						<option value="hyacinths"{{if eq .Species "hyacinths"}} selected{{end}}>Hyacinths</option>
 						<option value="lilies"{{if eq .Species "lilies"}} selected{{end}}>Lilies</option>
 						<option value="mums"{{if eq .Species "mums"}} selected{{end}}>Mums</option>
-						<option value="pansies"{{if eq .Species "pansies"}} selected{{end}}>Pansiess</option>
+						<option value="pansies"{{if eq .Species "pansies"}} selected{{end}}>Pansies</option>
 						<option value="roses"{{if eq .Species "roses"}} selected{{end}}>Roses</option>
 						<option value="tulips"{{if eq .Species "tulips"}} selected{{end}}>Tulips</option>
 						<option value="windflowers"{{if eq .Species "windflowers"}} selected{{end}}>Windflowers</option>
 					</select>
-				</div>
-				<div><label for="firstGenotype">First genotype: </label><input type="text" name="firstGenotype" id="firstGenotype" value="{{.FirstGenotype}}"></div>
-				<div><label for="secondGenotype">Second genotype: </label><input type="text" name="secondGenotype" id="secondGenotype" value="{{.SecondGenotype}}"></div>
-				<div><input type="submit" value="Breed 'em!"></div>
-
-				{{if .Error}}<div><b>{{.Error}}</b></div>{{end}}
-
-				{{if .Results}}
-				<div>
-				<br/>
-				<b>Results:</b>
-				<ul>
-				{{range .Results}}
-					<li>{{.}}</li>
-				{{end}}
-				</ul>
-				</div>
-				{{end}}
+				</p>
+				<p><label for="firstGenotype">First genotype: </label><input type="text" name="firstGenotype" id="firstGenotype" value="{{.FirstGenotype}}"></p>
+				<p><label for="secondGenotype">Second genotype: </label><input type="text" name="secondGenotype" id="secondGenotype" value="{{.SecondGenotype}}"></p>
+				<p><input type="submit" value="Breed 'em!"></p>
 			</form>
+
+			{{if .Error}}<div><b>{{.Error}}</b></div>{{end}}
+
+			{{if .Results}}
+			<div>
+			<table class="flower-table">
+				<tr>
+					<th>Odds</th>
+					<th>Genotype</th>
+					<th>Phenotype</th>
+				</tr>
+				{{range .Results}}
+				<tr>
+					<td>{{.Odds}}</td>
+					<td class="genotype-cell">{{.Genotype}}</td>
+					<td>{{.Phenotype}}</td>
+				</tr>
+				{{end}}
+			</table>
+			</div>
+			{{end}}
 		</div>
 	</div>
 </body>
