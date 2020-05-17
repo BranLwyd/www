@@ -30,6 +30,7 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Phenotype string
 	}
 
+	var resultString string
 	var results []result
 	var errStr string
 	if speciesParam != "" && firstGenotypeParam != "" && secondGenotypeParam != "" {
@@ -39,7 +40,7 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			goto writeResult
 		}
 
-		gs, err := flower.NewGenotypeSerdeFromExample(firstGenotypeParam)
+		gs, err := flower.NewGenotypeSerdeFromExampleDistribution(firstGenotypeParam)
 		if err != nil {
 			errStr = fmt.Sprintf("Couldn't parse first genotype: %v", err)
 			goto writeResult
@@ -49,20 +50,19 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			goto writeResult
 		}
 
-		ga, err := gs.ParseGenotype(firstGenotypeParam)
+		gda, err := gs.ParseGeneticDistribution(firstGenotypeParam)
 		if err != nil {
 			errStr = fmt.Sprintf("Couldn't parse first genotype: %v", err)
 			goto writeResult
 		}
-		gb, err := gs.ParseGenotype(secondGenotypeParam)
+		gdb, err := gs.ParseGeneticDistribution(secondGenotypeParam)
 		if err != nil {
 			errStr = fmt.Sprintf("Couldn't parse second genotype: %v", err)
 			goto writeResult
 		}
 
-		gda := ga.ToGeneticDistribution()
-		gdb := gb.ToGeneticDistribution()
 		gdRslt := gda.Breed(gdb)
+		resultString = gs.RenderGeneticDistribution(gdRslt)
 
 		var totalOdds uint64
 		for _, p := range gdRslt {
@@ -91,12 +91,14 @@ writeResult:
 		Species        string
 		FirstGenotype  string
 		SecondGenotype string
+		ResultString   string
 		Results        []result
 		Error          string
 	}{
 		Species:        speciesParam,
 		FirstGenotype:  firstGenotypeParam,
 		SecondGenotype: secondGenotypeParam,
+		ResultString:   resultString,
 		Results:        results,
 		Error:          errStr,
 	}); err != nil {
