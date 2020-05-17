@@ -13,6 +13,7 @@ go_binary(
     pure = "on",
     deps = [
         "//:assets",
+        "@com_github_branlwyd_acnh_flowers//:flower",
         "@org_golang_x_crypto//acme:go_default_library",
         "@org_golang_x_crypto//acme/autocert:go_default_library",
     ],
@@ -28,6 +29,7 @@ go_binary(
     pure = "on",
     deps = [
         "//:assets",
+        "@com_github_branlwyd_acnh_flowers//:flower",
     ],
 )
 

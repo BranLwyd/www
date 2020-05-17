@@ -29,6 +29,12 @@ load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 gazelle_dependencies()
 
 go_repository(
+    name = "com_github_branlwyd_acnh_flowers",
+    commit = "4647fef8c5aed1e50ed88803b5a9631b9d00517f",
+    importpath = "github.com/BranLwyd/acnh_flowers",
+)
+
+go_repository(
     name = "org_golang_x_crypto",
     commit = "0ec3e9974c59449edd84298612e9f16fa13368e8",
     importpath = "golang.org/x/crypto",
