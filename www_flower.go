@@ -80,7 +80,7 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			results = append(results, result{
 				Odds:      fmt.Sprintf("%.02f%% (%d/%d)", 100*float64(p)/float64(totalOdds), num, den),
 				Genotype:  gs.RenderGenotype(g),
-				Phenotype: s.Phenotype(g),
+				Phenotype: renderPhenotype(s, g),
 			})
 		}
 	}
@@ -108,6 +108,13 @@ writeResult:
 	http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(buf.Bytes()))
 }
 
+func renderPhenotype(s flower.Species, g flower.Genotype) string {
+	if _, ok := seedGenotypes[s.Name()][g]; ok {
+		return fmt.Sprintf("%s (seed)", s.Phenotype(g))
+	}
+	return s.Phenotype(g)
+}
+
 var (
 	species = map[string]flower.Species{
 		"cosmos":      flower.Cosmos(),
@@ -119,7 +126,29 @@ var (
 		"tulips":      flower.Tulips(),
 		"windflowers": flower.Windflowers(),
 	}
+
+	seedGenotypes map[string]map[flower.Genotype]struct{}
 )
+
+func init() {
+	seedGenotypes = map[string]map[flower.Genotype]struct{}{}
+	for _, x := range []struct {
+		species       flower.Species
+		seedGenotypes []string
+	}{
+		{flower.Cosmos(), []string{"rryySs", "rrYYSs", "RRyyss"}},
+	} {
+		m := map[flower.Genotype]struct{}{}
+		for _, sg := range x.seedGenotypes {
+			g, err := x.species.ParseGenotype(sg)
+			if err != nil {
+				panic(fmt.Sprintf("Couldn't parse seed genotype %q for species %s", sg, x.species.Name()))
+			}
+			m[g] = struct{}{}
+		}
+		seedGenotypes[x.species.Name()] = m
+	}
+}
 
 // Based on https://en.wikipedia.org/wiki/Binary_GCD_algorithm#Iterative_version_in_C.
 func gcd(u, v uint64) uint64 {
