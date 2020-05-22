@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 	"time"
 
@@ -13,7 +14,28 @@ import (
 )
 
 var (
-	flowerTmpl = template.Must(template.New("flower-tmpl").Parse(string(assets.Asset["assets/flowers.html"])))
+	colorMap = map[string]string{
+		"White":         "W",
+		"White (seed)":  "W",
+		"Pink":          "P",
+		"Red":           "R",
+		"Red (seed)":    "R",
+		"Orange":        "O",
+		"Yellow":        "Y",
+		"Yellow (seed)": "Y",
+		"Green":         "G",
+		"Blue":          "B",
+		"Purple":        "U",
+		"Black":         "K",
+	}
+
+	flowerTmpl = template.Must(template.New("flower-tmpl").Funcs(template.FuncMap{
+		"pic": func(species, phenotype string) string {
+			s := strings.ToUpper(species[0:1])
+			c := colorMap[phenotype]
+			return fmt.Sprintf("/img/%s%s.png", s, c)
+		},
+	}).Parse(string(assets.Asset["assets/flowers.html"])))
 )
 
 type flowerHandler struct{}

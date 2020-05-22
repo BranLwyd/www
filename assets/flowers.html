@@ -42,11 +42,11 @@
 					<th>Genotype</th>
 					<th>Phenotype</th>
 				</tr>
-				{{range .Results}}
+				{{$spc := .Species}}{{range .Results}}
 				<tr>
 					<td>{{.Odds}}</td>
 					<td><code>{{.Genotype}}</code></td>
-					<td>{{.Phenotype}}</td>
+					<td><img src="{{pic $spc .Phenotype}}"> <span>{{.Phenotype}}</span></td>
 				</tr>
 				{{end}}
 			</table>

@@ -131,5 +131,18 @@ func main() {
 	mux.Handle("/style.css", Must(NewAssetHandler("assets/style.css", "text/css; charset=utf-8")))
 	mux.Handle("/favicon.ico", Must(NewAssetHandler("assets/favicon.ico", "image/x-icon")))
 	mux.Handle("/resume.pdf", Must(NewAssetHandler("assets/resume.pdf", "application/pdf")))
+
+	// Flower pics.
+	for _, species := range []string{"R", "T", "P", "C", "L", "H", "W", "M"} {
+		for _, color := range []string{"W", "P", "R", "O", "Y", "G", "B", "U", "K"} {
+			assetName := fmt.Sprintf("assets/img/%s%s.png", species, color)
+			if _, ok := assets.Asset[assetName]; !ok {
+				// Not all species/color combinations are represented.
+				continue
+			}
+			mux.Handle(fmt.Sprintf("/img/%s%s.png", species, color), Must(NewAssetHandler(assetName, "image/png")))
+		}
+	}
+
 	serve(NewSecureHeaderHandler(mux))
 }

@@ -86,3 +86,9 @@ form input[type=text] {
 .flower-table tr:nth-child(even) {
   background-color: #f5f5f5;
 }
+
+.flower-table img {
+  width: 32px;
+  height: 32px;
+  vertical-align: middle;
+}
