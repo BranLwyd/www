@@ -30,7 +30,7 @@ gazelle_dependencies()
 
 go_repository(
     name = "com_github_branlwyd_acnh_flowers",
-    commit = "f8d0c9699a9c35bf4cc8580bae77880b78708b8c",
+    commit = "3b92d2d934cd50f5166adf58cb49158d08a9ceae",
     importpath = "github.com/BranLwyd/acnh_flowers",
 )
 
