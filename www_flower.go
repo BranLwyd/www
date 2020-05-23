@@ -21,6 +21,7 @@ var (
 		"Red":           "R",
 		"Red (seed)":    "R",
 		"Orange":        "O",
+		"Orange (seed)": "O",
 		"Yellow":        "Y",
 		"Yellow (seed)": "Y",
 		"Green":         "G",
@@ -154,6 +155,13 @@ func init() {
 		seedGenotypes []string
 	}{
 		{flower.Cosmos(), []string{"rryySs", "rrYYSs", "RRyyss"}},
+		{flower.Hyacinths(), []string{"rryyWw", "rrYYWW", "RRyyWw"}},
+		{flower.Lilies(), []string{"rryySS", "rrYYss", "RRyySs"}},
+		{flower.Mums(), []string{"rryyWw", "rrYYWW", "RRyyWW"}},
+		{flower.Pansies(), []string{"rryyWw", "rrYYWW", "RRyyWW"}},
+		{flower.Roses(), []string{"rryyWwss", "rrYYWWss", "RRyyWWSs"}},
+		{flower.Tulips(), []string{"rryySs", "rrYYss", "RRyySs"}},
+		{flower.Windflowers(), []string{"rrooWw", "rrOOWW", "RRooWW"}},
 	} {
 		m := map[flower.Genotype]struct{}{}
 		for _, sg := range x.seedGenotypes {
