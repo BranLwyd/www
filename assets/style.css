@@ -18,20 +18,20 @@ body {
   line-height: 24px;
 }
 
+.inner-content {
+  padding: 0 4em 2em;
+}
+
 p {
   margin: 0 0 16px;
 }
 
 
-.content h1 {
+h1 {
   position: relative;
   padding: 2em;
   text-align: center;
   font-style: italic;
-}
-
-.inner-content {
-  padding: 0 4em 2em;
 }
 
 li {
