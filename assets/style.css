@@ -1,14 +1,7 @@
 body {
   margin: 0;
-  background-color: #f5f5f5;
-  font-family: sans-serif;
-}
-
-.ribbon {
-  width: 100%;
-  height: 128px;
-  background-color: #555;
-  border-bottom: 1px solid black;
+  background-color: #ddd;
+  font-family: 'Merriweather', serif;
 }
 
 .content {
@@ -21,7 +14,7 @@ body {
   max-width: 939px;
   width: calc(80% - 138px);
   border: 1px solid black;
-
+  box-shadow: 4px 4px darkgray;
   line-height: 24px;
 }
 
@@ -29,19 +22,16 @@ p {
   margin: 0 0 16px;
 }
 
-.inner-content {
-  padding: 2em 4em;
-}
 
-.header {
+.content h1 {
+  position: relative;
   padding: 2em;
-  background: #ddd;
-  border-bottom: 1px solid black;
+  text-align: center;
+  font-style: italic;
 }
 
-.header h1 {
-  text-align: center;
-  letter-spacing: 3px;
+.inner-content {
+  padding: 0 4em 2em;
 }
 
 form {

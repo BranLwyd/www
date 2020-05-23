@@ -48,8 +48,8 @@ func (shh secureHeaderHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	w.Header().Add("X-Content-Type-Options", "nosniff")
 
 	// Chrome's PDF renderer uses inline CSS, which is broken by strict CSPs (!).
-	// TODO: remove the style-src directive once Chrome fixes its PDF renderer
-	w.Header().Add("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'")
+	// TODO: remove the 'unsafe-inline' style-src directive once Chrome fixes its PDF renderer
+	w.Header().Add("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com")
 
 	shh.h.ServeHTTP(w, r)
 }
