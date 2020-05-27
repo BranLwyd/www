@@ -12,10 +12,16 @@ body {
   margin: 32px auto 80px;
   min-width: 30em;
   max-width: 939px;
-  width: calc(80% - 138px);
+  width: 80%;
   border: 1px solid black;
   box-shadow: 4px 4px darkgray;
   line-height: 24px;
+}
+
+@media screen and (max-width: 1024px) {
+  .content {
+    width: 95%;
+  }
 }
 
 .inner-content {
