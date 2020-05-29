@@ -6,22 +6,15 @@ body {
 
 .content {
   padding: 0;
-  font-size: 14px;
+  font-size: 0.9em;
   background-color: #ffffff;
   color: #424242;
   margin: 32px auto 32px;
-  min-width: 30em;
-  max-width: 939px;
-  width: 80%;
+  max-width: 900px;
+  width: 95%;
   border: 1px solid black;
   box-shadow: 4px 4px darkgray;
-  line-height: 24px;
-}
-
-@media screen and (max-width: 1024px) {
-  .content {
-    width: 95%;
-  }
+  line-height: 1.5em;
 }
 
 .inner-content {
