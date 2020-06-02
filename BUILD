@@ -41,6 +41,10 @@ convert_md_to_html(
     name = "html_assets",
     srcs = glob(["assets/pages/*"]),
     template = "assets/template.html",
+    title = "Branland",
+    titles = {
+        "flowers.md": "AC:NH Flower Breeding Tool",
+    },
 )
 
 go_embed_data(
