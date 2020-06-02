@@ -1,4 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_embed_data", "go_library")
+load("//tools:md.bzl", "convert_md_to_html")
 
 ##
 ## Binaries
@@ -36,15 +37,35 @@ go_binary(
 ##
 ## Static assets
 ##
+convert_md_to_html(
+    name = "html_assets",
+    srcs = glob(["assets/pages/*"]),
+    template = "assets/template.html",
+)
+
 go_embed_data(
-    name = "embed_assets",
-    srcs = glob(["assets/**/*"]),
+    name = "embed_html_assets",
+    srcs = [":html_assets"],
+    flatten = True,
     package = "assets",
-    var = "Asset",
+    var = "Page",
+)
+
+go_embed_data(
+    name = "embed_static_assets",
+    srcs = glob(
+        ["assets/**/*"],
+        exclude = ["assets/pages/*"],
+    ),
+    package = "assets",
+    var = "Static",
 )
 
 go_library(
     name = "assets",
-    srcs = [":embed_assets"],
+    srcs = [
+        ":embed_html_assets",
+        ":embed_static_assets",
+    ],
     importpath = "github.com/BranLwyd/www/assets",
 )

@@ -104,14 +104,27 @@ func (sh *staticHandler) etag() string {
 	return sh.tag
 }
 
-func NewAssetHandler(assetName, contentType string) (*staticHandler, error) {
-	content, ok := assets.Asset[assetName]
+func NewStaticAssetHandler(assetName, contentType string) (*staticHandler, error) {
+	content, ok := assets.Static[assetName]
 	if !ok {
 		return nil, fmt.Errorf("no such asset %q", assetName)
 	}
 	sh := &staticHandler{
 		content:     content,
 		contentType: contentType,
+	}
+	go sh.etag() // eagerly compute etag so that it will probably be available by the first request
+	return sh, nil
+}
+
+func NewPageHandler(pageName string) (*staticHandler, error) {
+	content, ok := assets.Page[pageName]
+	if !ok {
+		return nil, fmt.Errorf("no such page %q", pageName)
+	}
+	sh := &staticHandler{
+		content:     content,
+		contentType: "text/html; charset=utf-8",
 	}
 	go sh.etag() // eagerly compute etag so that it will probably be available by the first request
 	return sh, nil
@@ -126,21 +139,21 @@ func Must(h http.Handler, err error) http.Handler {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("/", NewFilteredHandler("/", Must(NewAssetHandler("assets/index.html", "text/html; charset=utf-8"))))
+	mux.Handle("/", NewFilteredHandler("/", Must(NewPageHandler("index.md.html"))))
 	mux.Handle("/flowers", flowerHandler{})
-	mux.Handle("/style.css", Must(NewAssetHandler("assets/style.css", "text/css; charset=utf-8")))
-	mux.Handle("/favicon.ico", Must(NewAssetHandler("assets/favicon.ico", "image/x-icon")))
-	mux.Handle("/resume.pdf", Must(NewAssetHandler("assets/resume.pdf", "application/pdf")))
+	mux.Handle("/style.css", Must(NewStaticAssetHandler("assets/static/style.css", "text/css; charset=utf-8")))
+	mux.Handle("/favicon.ico", Must(NewStaticAssetHandler("assets/static/favicon.ico", "image/x-icon")))
+	mux.Handle("/resume.pdf", Must(NewStaticAssetHandler("assets/static/resume.pdf", "application/pdf")))
 
 	// Flower pics.
 	for _, species := range []string{"R", "T", "P", "C", "L", "H", "W", "M"} {
 		for _, color := range []string{"W", "P", "R", "O", "Y", "G", "B", "U", "K"} {
-			assetName := fmt.Sprintf("assets/img/%s%s.png", species, color)
-			if _, ok := assets.Asset[assetName]; !ok {
+			assetName := fmt.Sprintf("assets/static/img/%s%s.png", species, color)
+			if _, ok := assets.Static[assetName]; !ok {
 				// Not all species/color combinations are represented.
 				continue
 			}
-			mux.Handle(fmt.Sprintf("/img/%s%s.png", species, color), Must(NewAssetHandler(assetName, "image/png")))
+			mux.Handle(fmt.Sprintf("/img/%s%s.png", species, color), Must(NewStaticAssetHandler(assetName, "image/png")))
 		}
 	}
 

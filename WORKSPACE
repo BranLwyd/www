@@ -19,10 +19,13 @@ http_archive(
 )
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@io_bazel_rules_go//extras:embed_data_deps.bzl", "go_embed_data_dependencies")
 
 go_rules_dependencies()
 
 go_register_toolchains()
+
+go_embed_data_dependencies()
 
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
@@ -32,6 +35,12 @@ go_repository(
     name = "com_github_branlwyd_acnh_flowers",
     commit = "3b92d2d934cd50f5166adf58cb49158d08a9ceae",
     importpath = "github.com/BranLwyd/acnh_flowers",
+)
+
+go_repository(
+    name = "com_github_gomarkdown_markdown",
+    commit = "62c5e2c608cc00df84fdb74c8f84c8a4a4bc0c33",
+    importpath = "github.com/gomarkdown/markdown",
 )
 
 go_repository(
