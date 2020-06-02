@@ -36,7 +36,7 @@ var (
 			c := colorMap[phenotype]
 			return fmt.Sprintf("/img/%s%s.png", s, c)
 		},
-	}).Parse(string(assets.Static["assets/static/flowers.html"])))
+	}).Parse(string(assets.Page["flowers.md.html"])))
 )
 
 type flowerHandler struct{}

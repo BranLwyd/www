@@ -8,5 +8,6 @@ go_binary(
     deps = [
         "@com_github_gomarkdown_markdown//:go_default_library",
         "@com_github_gomarkdown_markdown//html:go_default_library",
+        "@com_github_gomarkdown_markdown//parser:go_default_library",
     ],
 )

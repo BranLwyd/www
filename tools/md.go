@@ -9,6 +9,7 @@ import (
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 var (
@@ -35,7 +36,7 @@ func main() {
 	if err != nil {
 		die("Couldn't read markdown %q: %v", *inFlag, err)
 	}
-	content := markdown.ToHTML(md, nil, html.NewRenderer(html.RendererOptions{Flags: html.HrefTargetBlank}))
+	content := markdown.ToHTML(md, parser.NewWithExtensions(parser.CommonExtensions & ^parser.MathJax), html.NewRenderer(html.RendererOptions{Flags: html.HrefTargetBlank}))
 
 	// Read template, replace content marker with content, & write result..
 	tmpl, err := ioutil.ReadFile(*templateFlag)
