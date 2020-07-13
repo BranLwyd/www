@@ -15,6 +15,7 @@ body {
   border: 1px solid black;
   box-shadow: 4px 4px darkgray;
   line-height: 1.5em;
+  text-align: justify;
 }
 
 .inner-content {
