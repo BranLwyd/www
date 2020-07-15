@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"text/template"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
@@ -46,13 +47,25 @@ func main() {
 	content := markdown.ToHTML(md, parser.NewWithExtensions(parser.CommonExtensions & ^parser.MathJax), html.NewRenderer(html.RendererOptions{Flags: html.HrefTargetBlank}))
 
 	// Read template, replace title & content markers with content, and write result.
-	html, err := ioutil.ReadFile(*templateFlag)
+	htmlTmplBytes, err := ioutil.ReadFile(*templateFlag)
 	if err != nil {
 		die("Couldn't read template %q: %v", *templateFlag, err)
 	}
-	html = bytes.Replace(html, titleMarker, []byte(*titleFlag), 1)
-	html = bytes.Replace(html, contentMarker, content, 1)
-	if err := ioutil.WriteFile(*outFlag, html, 0640); err != nil {
+	htmlTmpl, err := template.New("").Parse(string(htmlTmplBytes))
+	if err != nil {
+		die("Couldn't parse template: %v", err)
+	}
+	var htmlBuf bytes.Buffer
+	if err := htmlTmpl.Execute(&htmlBuf, struct {
+		Title   string
+		Content string
+	}{
+		Title:   *titleFlag,
+		Content: string(content),
+	}); err != nil {
+		die("Couldn't execute template: %v", err)
+	}
+	if err := ioutil.WriteFile(*outFlag, htmlBuf.Bytes(), 0640); err != nil {
 		die("Couldn't write HTML %q: %v", *outFlag, err)
 	}
 }
