@@ -33,30 +33,30 @@ gazelle_dependencies()
 
 go_repository(
     name = "com_github_branlwyd_acnh_flowers",
-    commit = "3b92d2d934cd50f5166adf58cb49158d08a9ceae",
+    commit = "dc2082decf1c7fef953e34b039d69280a9e318e0",
     importpath = "github.com/BranLwyd/acnh_flowers",
 )
 
 go_repository(
     name = "com_github_gomarkdown_markdown",
-    commit = "62c5e2c608cc00df84fdb74c8f84c8a4a4bc0c33",
+    commit = "3f9352745725482bc45bab368fdd4d111ea67307",
     importpath = "github.com/gomarkdown/markdown",
 )
 
 go_repository(
     name = "org_golang_x_crypto",
-    commit = "0ec3e9974c59449edd84298612e9f16fa13368e8",
+    commit = "948cd5f35899cbf089c620b3caeac9b60fa08704",
     importpath = "golang.org/x/crypto",
 )
 
 go_repository(
     name = "org_golang_x_net",
-    commit = "d3edc9973b7eb1fb302b0ff2c62357091cea9a30",
+    commit = "ab34263943818b32f575efc978a3d24e80b04bd7",
     importpath = "golang.org/x/net",
 )
 
 go_repository(
     name = "org_golang_x_text",
-    commit = "06d492aade888ab8698aad35476286b7b555c961",
+    commit = "23ae387dee1f90d29a23c0e87ee0b46038fbed0e",
     importpath = "golang.org/x/text",
 )

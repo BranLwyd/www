@@ -88,8 +88,8 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		resultString = gs.RenderGeneticDistribution(gdRslt)
 
 		var totalOdds uint64
-		gdRslt.Visit(func(g flower.Genotype, p uint64) { totalOdds += p })
-		gdRslt.Visit(func(g flower.Genotype, p uint64) {
+		gdRslt.Visit(func(g flower.Genotype, p uint64) bool { totalOdds += p; return true })
+		gdRslt.Visit(func(g flower.Genotype, p uint64) bool {
 			gcd := gcd(p, totalOdds)
 			num, den := p/gcd, totalOdds/gcd
 
@@ -98,6 +98,7 @@ func (flowerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Genotype:  gs.RenderGenotype(g),
 				Phenotype: renderPhenotype(s, g),
 			})
+			return true
 		})
 	}
 
@@ -130,7 +131,7 @@ func renderPhenotype(s flower.Species, g flower.Genotype) string {
 	if _, ok := seedGenotypes[s.Name()][g]; ok {
 		return fmt.Sprintf("%s (seed)", s.Phenotype(g))
 	}
-	return s.Phenotype(g)
+	return s.Phenotype(g).String()
 }
 
 var (
